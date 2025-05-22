@@ -64,20 +64,22 @@ download_with_progress() {
     fi
 }
 
-# Install Neovim AppImage
+# Install Neovim static binary
 if [ ! -f "$INSTALL_DIR/bin/nvim" ]; then
     print_status "Installing Neovim..."
     cd "$TOOLS_DIR"
     download_with_progress \
-        "https://github.com/neovim/neovim/releases/latest/download/nvim.appimage" \
-        "nvim.appimage"
-    chmod +x nvim.appimage
-    ln -sf "$TOOLS_DIR/nvim.appimage" "$INSTALL_DIR/bin/nvim"
+        "https://github.com/neovim/neovim/releases/download/v0.9.5/nvim-linux64.tar.gz" \
+        "nvim-linux64.tar.gz"
+    
+    print_status "Extracting Neovim..."
+    tar -xzf nvim-linux64.tar.gz
+    ln -sf "$TOOLS_DIR/nvim-linux64/bin/nvim" "$INSTALL_DIR/bin/nvim"
+    rm nvim-linux64.tar.gz
     print_success "Neovim installed"
 else
     print_success "Neovim already installed"
 fi
-
 # Install clangd
 if [ ! -f "$INSTALL_DIR/bin/clangd" ]; then
     print_status "Installing clangd..."
