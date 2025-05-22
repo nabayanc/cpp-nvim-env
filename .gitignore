@@ -1,0 +1,116 @@
+# Backup files
+*.backup.*
+*~
+*.swp
+*.swo
+
+# Compiled binaries and build artifacts
+build/
+*.o
+*.obj
+*.so
+*.dylib
+*.a
+*.lib
+*.dll
+*.exe
+main
+a.out
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+.vim/
+.nvim/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# C++ specific
+compile_commands.json
+.cache/
+*.d
+*.gch
+*.pch
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
+# Meson
+meson-logs/
+meson-private/
+
+# Package managers
+conan.lock
+vcpkg_installed/
+
+# Testing
+*.gcov
+*.gcno
+*.gcda
+coverage/
+*.profraw
+*.profdata
+
+# Documentation
+docs/build/
+site/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Log files
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Python (if using any Python tools)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
