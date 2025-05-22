@@ -1,0 +1,99 @@
+# Simple Zsh Configuration for C++ Development
+# No Oh My Zsh - just clean, working zsh
+
+# Basic options
+setopt AUTO_CD
+setopt HIST_VERIFY
+setopt SHARE_HISTORY
+setopt APPEND_HISTORY
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+
+# History
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+
+# Simple but effective prompt
+autoload -U colors && colors
+PROMPT="%{$fg[green]%}%n@%m%{$reset_color%}:%{$fg[blue]%}%~%{$reset_color%}$ "
+
+# Add local bin to PATH
+export PATH="$HOME/.local/bin:$PATH"
+
+# Aliases for C++ development
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# Development aliases
+alias v='nvim'
+alias vim='nvim'
+alias cls='clear'
+alias h='history'
+
+# Git aliases
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline'
+alias gd='git diff'
+
+# C++ specific aliases
+alias cpp-debug='g++ -std=c++17 -Wall -Wextra -g -DDEBUG'
+alias cpp-release='g++ -std=c++17 -Wall -Wextra -O2 -DNDEBUG'
+
+# Quick navigation
+alias cpp-test='cd ~/cpp-test-fixed'
+alias dev='cd ~/cpp-nvim-env'
+
+# Function to create C++ project
+cpp-init() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: cpp-init <project-name>"
+        return 1
+    fi
+    
+    mkdir -p "$1"
+    cd "$1"
+    
+    cat > main.cpp << 'EOFCPP'
+#include <iostream>
+
+int main() {
+    std::cout << "Hello, World!" << std::endl;
+    return 0;
+}
+EOFCPP
+    
+    cat > CMakeLists.txt << 'EOFCMAKE'
+cmake_minimum_required(VERSION 3.10)
+project(PROJECT_NAME)
+
+set(CMAKE_CXX_STANDARD 17)
+add_executable(main main.cpp)
+EOFCMAKE
+    
+    sed -i "s/PROJECT_NAME/$1/g" CMakeLists.txt
+    
+    echo "✓ Created C++ project: $1"
+    echo "Next steps:"
+    echo "  cpp-build    # Build the project"
+    echo "  nvim .       # Open in Neovim"
+}
+
+# Welcome message
+echo "🎯 C++ Development Environment Ready!"
+echo "💡 Try: cpp-init <project-name> to create a new C++ project"
+
+# Basic completion (if available)
+autoload -U compinit
+if [[ -d ~/.zcompdump ]]; then
+    compinit -d ~/.zcompdump
+else
+    compinit 2>/dev/null || true
+fi

@@ -22,3 +22,16 @@ require("lazy").setup("plugins", {
   change_detection = { notify = false },
   checker = { enabled = false },
 })
+
+-- Auto-open file explorer on startup (VSCode-like behavior)
+vim.api.nvim_create_autocmd("VimEnter", {
+  pattern = "*",
+  callback = function()
+    -- Open nvim-tree if no file was specified or if opening a directory
+    if vim.fn.argc() == 0 or vim.fn.isdirectory(vim.fn.argv(0)) == 1 then
+      vim.schedule(function()
+        require("nvim-tree.api").tree.open()
+      end)
+    end
+  end,
+})
