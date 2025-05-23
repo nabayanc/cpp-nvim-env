@@ -35,3 +35,6 @@ vim.api.nvim_create_autocmd("VimEnter", {
     end
   end,
 })
+
+-- Load icon configuration early
+require("config.icons").setup()

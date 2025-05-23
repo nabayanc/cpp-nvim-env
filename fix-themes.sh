@@ -1,3 +1,45 @@
+#!/bin/bash
+# Fix Catppuccin Theme Loading Issue
+# Ensures the theme loads properly on all systems
+
+set -e
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+print_status() { echo -e "${BLUE}[FIX]${NC} $1"; }
+print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NVIM_CONFIG="$HOME/.config/nvim"
+
+print_status "🎨 Fixing Catppuccin theme loading issue..."
+
+# Step 1: Check current setup
+print_status "Step 1: Diagnosing theme issue..."
+
+if [[ ! -d "$NVIM_CONFIG" ]]; then
+    print_error "Neovim config directory not found!"
+    exit 1
+fi
+
+# Check if plugins are installed
+if [[ -d "$HOME/.local/share/nvim/lazy/catppuccin" ]]; then
+    print_success "Catppuccin plugin directory exists"
+else
+    print_warning "Catppuccin plugin not installed yet"
+fi
+
+# Step 2: Fix the UI plugin configuration
+print_status "Step 2: Updating theme configuration for better compatibility..."
+
+cat > "$NVIM_CONFIG/lua/plugins/ui.lua" << 'EOF'
 -- Enhanced UI Plugins with Fixed Theme Loading
 return {
   -- Color scheme - Catppuccin with proper loading
@@ -468,3 +510,129 @@ return {
     end,
   },
 }
+EOF
+
+print_success "Updated UI configuration with better theme loading"
+
+# Step 3: Clear plugin cache and force reinstall
+print_status "Step 3: Clearing plugin cache to force clean install..."
+
+rm -rf "$HOME/.local/share/nvim/lazy/catppuccin" 2>/dev/null || true
+rm -rf "$HOME/.local/state/nvim/lazy-lock.json" 2>/dev/null || true
+
+print_success "Cleared theme plugin cache"
+
+# Step 4: Create fallback theme configuration
+print_status "Step 4: Adding fallback theme support..."
+
+cat > "$NVIM_CONFIG/lua/config/theme-fallback.lua" << 'EOF'
+-- Theme Fallback Configuration
+-- Ensures a good-looking theme even if Catppuccin fails
+
+local M = {}
+
+function M.setup_theme()
+  -- Try to load Catppuccin first
+  local catppuccin_ok, catppuccin = pcall(require, "catppuccin")
+  
+  if catppuccin_ok then
+    catppuccin.setup({
+      flavour = "mocha",
+      integrations = {
+        cmp = true,
+        gitsigns = true,
+        nvimtree = true,
+        telescope = true,
+        treesitter = true,
+      },
+    })
+    
+    local status_ok, _ = pcall(vim.cmd.colorscheme, "catppuccin")
+    if status_ok then
+      print("✓ Catppuccin theme loaded")
+      return true
+    end
+  end
+  
+  -- Fallback themes in order of preference
+  local fallback_themes = {
+    "habamax",    -- Modern, built-in theme
+    "murphy",     -- Classic dark theme
+    "slate",      -- Another good dark theme
+    "default",    -- Always available
+  }
+  
+  for _, theme in ipairs(fallback_themes) do
+    local ok, _ = pcall(vim.cmd.colorscheme, theme)
+    if ok then
+      print("Using fallback theme: " .. theme)
+      
+      -- Enhance the fallback theme with better colors
+      vim.api.nvim_set_hl(0, "Normal", { bg = "#1e1e2e", fg = "#cdd6f4" })
+      vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#313244" })
+      vim.api.nvim_set_hl(0, "CursorLine", { bg = "#313244" })
+      vim.api.nvim_set_hl(0, "Visual", { bg = "#585b70" })
+      vim.api.nvim_set_hl(0, "Search", { bg = "#f9e2af", fg = "#1e1e2e" })
+      vim.api.nvim_set_hl(0, "StatusLine", { bg = "#45475a", fg = "#cdd6f4" })
+      
+      return true
+    end
+  end
+  
+  print("Warning: All themes failed, using Neovim defaults")
+  return false
+end
+
+return M
+EOF
+
+# Step 5: Update init.lua to use fallback theme
+print_status "Step 5: Updating init.lua with theme fallback..."
+
+# Add fallback theme loading to init.lua if not already present
+if ! grep -q "theme-fallback" "$NVIM_CONFIG/init.lua"; then
+    cat >> "$NVIM_CONFIG/init.lua" << 'EOF'
+
+-- Setup theme with fallback support
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function()
+    require("config.theme-fallback").setup_theme()
+  end,
+})
+EOF
+fi
+
+print_success "Added theme fallback to init.lua"
+
+# Step 6: Copy updated config to repository
+print_status "Step 6: Updating repository with fixed configuration..."
+
+if [[ -d "$SCRIPT_DIR/nvim" ]]; then
+    cp -r "$NVIM_CONFIG"/* "$SCRIPT_DIR/nvim/"
+    print_success "Updated repository nvim configuration"
+fi
+
+print_success "🎨 Theme fix complete!"
+
+echo ""
+print_status "📋 WHAT WAS FIXED:"
+echo "  ✓ Added proper plugin loading priority for Catppuccin"
+echo "  ✓ Added error handling for theme loading"
+echo "  ✓ Created fallback theme system"
+echo "  ✓ Cleared plugin cache for clean reinstall"
+echo "  ✓ Enhanced theme compatibility across systems"
+echo ""
+print_status "🚀 NEXT STEPS:"
+echo "  1. Restart Neovim: exit and run 'nvim .'"
+echo "  2. Plugins will reinstall automatically (1-2 minutes)"
+echo "  3. Theme should load properly now"
+echo "  4. If using fallback theme, it will still look great!"
+echo ""
+print_status "🎯 TO TEST:"
+echo "  nvim ."
+echo "  # Wait for plugins to install"
+echo "  # You should see either:"
+echo "  # - '✓ Catppuccin theme loaded' (success)"
+echo "  # - 'Using fallback theme: X' (still looks good)"
+echo ""
+print_success "Theme loading should now work reliably! 🎨"

@@ -1,0 +1,287 @@
+# Beautiful Custom Zsh Configuration
+# Designed to work reliably without Oh My Zsh dependencies
+
+# Basic zsh options
+setopt AUTO_CD                 # cd to directory just by typing its name
+setopt HIST_VERIFY            # show command with history expansion before running
+setopt SHARE_HISTORY          # share command history data
+setopt APPEND_HISTORY         # append to history file
+setopt HIST_IGNORE_DUPS       # ignore duplicates in history
+setopt HIST_IGNORE_SPACE      # ignore commands starting with space
+setopt HIST_REDUCE_BLANKS     # remove extra blanks from history
+setopt INTERACTIVE_COMMENTS   # allow comments in interactive mode
+setopt AUTO_LIST              # automatically list choices on ambiguous completion
+setopt AUTO_MENU              # show completion menu on successive tab press
+setopt COMPLETE_IN_WORD       # allow completion from within a word
+setopt ALWAYS_TO_END          # move cursor to end if word had one match
+
+# History configuration
+HISTFILE=~/.zsh_history
+HISTSIZE=50000
+SAVEHIST=50000
+
+# Load colors
+autoload -U colors && colors
+
+# Enable completion system (safely)
+autoload -U compinit
+if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
+    compinit
+else
+    compinit -C
+fi
+
+# Beautiful prompt with git support
+autoload -Uz vcs_info
+precmd() { vcs_info }
+
+# Configure git info
+zstyle ':vcs_info:git:*' formats ' (%F{cyan}%b%f)'
+zstyle ':vcs_info:*' enable git
+
+setopt PROMPT_SUBST
+
+# Multi-line prompt with colors and git
+PROMPT='%F{green}┌─[%f%F{blue}%n%f%F{green}@%f%F{blue}%m%f%F{green}]─[%f%F{yellow}%~%f%F{green}]${vcs_info_msg_0_}%f
+%F{green}└─%f%F{red}❯%f%F{yellow}❯%f%F{green}❯%f '
+
+# Right prompt with time
+RPROMPT='%F{gray}[%*]%f'
+
+# Add local bin to PATH
+export PATH="$HOME/.local/bin:$PATH"
+
+# Enhanced aliases
+alias ll='ls -alF --color=auto'
+alias la='ls -A --color=auto'
+alias l='ls -CF --color=auto'
+alias ls='ls --color=auto'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+
+# Development aliases
+alias v='nvim'
+alias vim='nvim'
+alias cls='clear'
+alias h='history'
+alias df='df -h'
+alias du='du -h'
+alias free='free -h'
+alias ps='ps aux'
+alias top='htop 2>/dev/null || top'
+
+# Git aliases with colors
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline --graph --decorate --color=always'
+alias gd='git diff --color=always'
+alias gb='git branch'
+alias gco='git checkout'
+alias gm='git merge'
+alias gf='git fetch'
+
+# C++ development aliases
+alias cpp-debug='g++ -std=c++17 -Wall -Wextra -g -DDEBUG'
+alias cpp-release='g++ -std=c++17 -Wall -Wextra -O2 -DNDEBUG'
+alias make-debug='make CMAKE_BUILD_TYPE=Debug'
+alias make-release='make CMAKE_BUILD_TYPE=Release'
+
+# Quick navigation
+alias cpp-test='cd ~/cpp-test-fixed'
+alias dev='cd ~/cpp-nvim-env'
+alias home='cd ~'
+alias projects='cd ~/projects 2>/dev/null || mkdir -p ~/projects && cd ~/projects'
+
+# Enhanced grep with colors
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# Network and system info
+alias myip='curl -s ipinfo.io/ip'
+alias ports='netstat -tulanp'
+alias meminfo='free -m -l -t'
+alias diskusage='du -h --max-depth=1'
+
+# C++ project creation function
+cpp-init() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: cpp-init <project-name>"
+        return 1
+    fi
+    
+    echo "🚀 Creating C++ project: $1"
+    mkdir -p "$1"
+    cd "$1"
+    
+    # Create main.cpp
+    cat > main.cpp << EOFCPP
+#include <iostream>
+#include <vector>
+#include <string>
+
+int main() {
+    std::cout << "Hello from $1!" << std::endl;
+    
+    std::vector<std::string> features = {
+        "Modern C++17",
+        "CMake build system", 
+        "Ready for development"
+    };
+    
+    std::cout << "Project features:" << std::endl;
+    for (const auto& feature : features) {
+        std::cout << "  ✓ " << feature << std::endl;
+    }
+    
+    return 0;
+}
+EOFCPP
+    
+    # Create CMakeLists.txt
+    cat > CMakeLists.txt << EOFCMAKE
+cmake_minimum_required(VERSION 3.10)
+project($1)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Compiler flags
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -DDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
+
+# Create executable
+add_executable(main main.cpp)
+
+# Optional: Add more source files here
+# add_executable(main main.cpp other.cpp)
+EOFCMAKE
+    
+    # Create .gitignore
+    cat > .gitignore << 'EOFGIT'
+# Build directories
+build/
+cmake-build-*/
+
+# Compiled files
+*.o
+*.so
+*.a
+*.exe
+main
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+EOFGIT
+
+    echo "✅ Created C++ project with:"
+    echo "   📄 main.cpp (Modern C++ hello world)"
+    echo "   🔧 CMakeLists.txt (CMake configuration)"
+    echo "   🚫 .gitignore (Ignore build files)"
+    echo ""
+    echo "🎯 Next steps:"
+    echo "   cpp-build    # Build the project"
+    echo "   nvim .       # Open in Neovim IDE"
+    echo "   git init     # Initialize git repository"
+}
+
+# Git project initialization function
+git-init-cpp() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: git-init-cpp <project-name>"
+        return 1
+    fi
+    
+    cpp-init "$1"
+    git init
+    git add .
+    git commit -m "Initial commit: C++ project setup"
+    echo "🎉 Git repository initialized with initial commit!"
+}
+
+# Quick project build and run
+cpp-run() {
+    if [[ ! -f "CMakeLists.txt" && ! -f "Makefile" ]]; then
+        echo "❌ No build system found (CMakeLists.txt or Makefile)"
+        return 1
+    fi
+    
+    echo "🔨 Building project..."
+    cpp-build
+    
+    if [[ -x "./main" ]]; then
+        echo "🚀 Running ./main:"
+        echo "----------------------------------------"
+        ./main
+    elif [[ -x "./build/main" ]]; then
+        echo "🚀 Running ./build/main:"
+        echo "----------------------------------------"
+        ./build/main
+    else
+        echo "❌ No executable found to run"
+    fi
+}
+
+# Enhanced cd with automatic ls
+cd() {
+    builtin cd "$@" && ls --color=auto
+}
+
+# Extract function for various archive types
+extract() {
+    if [[ -f $1 ]]; then
+        case $1 in
+            *.tar.bz2)   tar xjf $1     ;;
+            *.tar.gz)    tar xzf $1     ;;
+            *.bz2)       bunzip2 $1     ;;
+            *.rar)       unrar e $1     ;;
+            *.gz)        gunzip $1      ;;
+            *.tar)       tar xf $1      ;;
+            *.tbz2)      tar xjf $1     ;;
+            *.tgz)       tar xzf $1     ;;
+            *.zip)       unzip $1       ;;
+            *.Z)         uncompress $1  ;;
+            *.7z)        7z x $1        ;;
+            *)           echo "'$1' cannot be extracted via extract()" ;;
+        esac
+    else
+        echo "'$1' is not a valid file"
+    fi
+}
+
+# Welcome message with system info
+welcome_msg() {
+    echo ""
+    echo "🎯 ${fg[cyan]}C++ Development Environment${reset_color}"
+    echo "📅 $(date)"
+    echo "💻 $(uname -n) | $(uname -s) $(uname -r)"
+    echo "📂 $(pwd)"
+    echo ""
+    echo "🚀 ${fg[green]}Quick Commands:${reset_color}"
+    echo "   cpp-init <name>     Create new C++ project"
+    echo "   git-init-cpp <name> Create C++ project with git"
+    echo "   cpp-run             Build and run current project"
+    echo "   v .                 Open in Neovim IDE"
+    echo "   projects            Go to projects directory"
+    echo ""
+}
+
+# Key bindings
+bindkey '^[[A' history-search-backward  # Up arrow
+bindkey '^[[B' history-search-forward   # Down arrow
+bindkey '^R' history-incremental-search-backward  # Ctrl+R
+
+# Show welcome message
+welcome_msg

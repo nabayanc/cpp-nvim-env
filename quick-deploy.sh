@@ -27,12 +27,42 @@ fi
 # Apply shell enhancements
 echo "🎨 Enhancing shell..."
 if [[ -f "restore-shell-features.sh" ]]; then
+
+# Fix file icons
+if [[ -f "fix-file-icons.sh" ]]; then
+    chmod +x fix-file-icons.sh
+    echo "🎨 Fixing file icons..."
+    echo "y" | ./fix-file-icons.sh
+fi
     chmod +x restore-shell-features.sh
+
+# Fix file icons
+if [[ -f "fix-file-icons.sh" ]]; then
+    chmod +x fix-file-icons.sh
+    echo "🎨 Fixing file icons..."
+    echo "y" | ./fix-file-icons.sh
+fi
     ./restore-shell-features.sh
+
+# Fix file icons
+if [[ -f "fix-file-icons.sh" ]]; then
+    chmod +x fix-file-icons.sh
+    echo "🎨 Fixing file icons..."
+    echo "y" | ./fix-file-icons.sh
+fi
 else
     echo "❌ restore-shell-features.sh not found!"
+
+# Fix file icons
+if [[ -f "fix-file-icons.sh" ]]; then
+    chmod +x fix-file-icons.sh
+    echo "🎨 Fixing file icons..."
+    echo "y" | ./fix-file-icons.sh
+fi
     exit 1
 fi
+
+./fix-tree-icons.sh
 
 echo ""
 echo "✅ Quick deployment complete!"

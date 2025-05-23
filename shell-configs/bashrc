@@ -1,229 +1,156 @@
-# Super Enhanced Bash Configuration
-# Beautiful, feature-rich bash that rivals zsh
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+# for examples
 
-# Source global definitions
-if [[ -f /etc/bashrc ]]; then
-    . /etc/bashrc
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+#shopt -s globstar
+
+# make less more friendly for non-text input files, see lesspipe(1)
+#[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
 fi
 
-# Add local bin to PATH
-export PATH="$HOME/.local/bin:$PATH"
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color|*-256color) color_prompt=yes;;
+esac
 
-# Enhanced history
-export HISTSIZE=50000
-export HISTFILESIZE=100000
-export HISTCONTROL=ignoredups:erasedups
-export HISTIGNORE="ls:cd:cd -:pwd:exit:date:* --help"
-shopt -s histappend
-shopt -s cmdhist
-shopt -s histreedit
-shopt -s histverify
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+#force_color_prompt=yes
 
-# Better bash options
-shopt -s autocd 2>/dev/null || true        # cd by typing directory name
-shopt -s dirspell 2>/dev/null || true      # correct directory name typos
-shopt -s cdspell 2>/dev/null || true       # correct cd typos
-shopt -s checkwinsize                       # check window size after commands
-shopt -s expand_aliases                     # expand aliases
-shopt -s dotglob                           # include dotfiles in pathname expansion
-
-# Colors for ls
-export LS_COLORS='di=1;34:ln=35:so=32:pi=33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=30;43'
-
-# Git prompt function
-git_prompt() {
-    local git_status=`git status -unormal 2>&1`
-    if ! [[ "$git_status" =~ Not\ a\ git\ repo ]]; then
-        if [[ "$git_status" =~ nothing\ to\ commit ]]; then
-            local Color_On='\[\033[0;32m\]'  # Green
-        elif [[ "$git_status" =~ nothing\ added\ to\ commit\ but\ untracked\ files\ present ]]; then
-            local Color_On='\[\033[0;33m\]'  # Yellow
-        else
-            local Color_On='\[\033[0;31m\]'  # Red
-        fi
-        local Color_Off='\[\033[0m\]'
-        local branch=`git branch 2>/dev/null | grep -e ^* | sed -E  s/^\\\\\*\ \(.+\)$/\\\\\(\\\\\1\\\\\)\ /`
-        echo " $Color_On$branch$Color_Off"
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+	# We have color support; assume it's compliant with Ecma-48
+	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+	# a case would tend to support setf rather than setaf.)
+	color_prompt=yes
+    else
+	color_prompt=
     fi
-}
+fi
 
-# Beautiful multi-line prompt
-PS1='\[\033[0;32m\]┌─[\[\033[0;34m\]\u\[\033[0;32m\]@\[\033[0;34m\]\h\[\033[0;32m\]]─[\[\033[0;33m\]\w\[\033[0;32m\]]$(git_prompt)\[\033[0m\]
-\[\033[0;32m\]└─\[\033[0;31m\]❯\[\033[0;33m\]❯\[\033[0;32m\]❯\[\033[0m\] '
+if [ "$color_prompt" = yes ]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
 
-# Enhanced aliases
-alias ll='ls -alF --color=auto'
-alias la='ls -A --color=auto'
-alias l='ls -CF --color=auto'
-alias ls='ls --color=auto'
-alias ..='cd ..'
-alias ...='cd ../..'
-alias ....='cd ../../..'
-alias .....='cd ../../../..'
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
+*)
+    ;;
+esac
 
-# Development aliases
-alias v='nvim'
-alias vim='nvim'
-alias cls='clear'
-alias h='history'
-alias df='df -h'
-alias du='du -h'
-alias free='free -h'
-alias ps='ps aux'
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
 
-# Git aliases
-alias gs='git status'
-alias ga='git add'
-alias gc='git commit'
-alias gp='git push'
-alias gl='git log --oneline --graph --decorate --color=always'
-alias gd='git diff --color=always'
-alias gb='git branch'
-alias gco='git checkout'
-alias gm='git merge'
-alias gf='git fetch'
+    #alias grep='grep --color=auto'
+    #alias fgrep='fgrep --color=auto'
+    #alias egrep='egrep --color=auto'
+fi
 
-# C++ development aliases
-alias cpp-debug='g++ -std=c++17 -Wall -Wextra -g -DDEBUG'
-alias cpp-release='g++ -std=c++17 -Wall -Wextra -O2 -DNDEBUG'
+# colored GCC warnings and errors
+#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-# Navigation aliases
-alias cpp-test='cd ~/cpp-test-fixed'
-alias dev='cd ~/cpp-nvim-env'
-alias home='cd ~'
-alias projects='cd ~/projects 2>/dev/null || mkdir -p ~/projects && cd ~/projects'
+# some more ls aliases
+#alias ll='ls -l'
+#alias la='ls -A'
+#alias l='ls -CF'
 
-# Enhanced grep
-alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash_aliases, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
-# C++ project creation function
-cpp-init() {
-    if [[ -z "$1" ]]; then
-        echo "Usage: cpp-init <project-name>"
-        return 1
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/nabayanc/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/nabayanc/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/nabayanc/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/nabayanc/miniconda3/bin:$PATH"
     fi
-    
-    echo "🚀 Creating C++ project: $1"
-    mkdir -p "$1"
-    cd "$1"
-    
-    cat > main.cpp << EOFCPP
-#include <iostream>
-#include <vector>
-#include <string>
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+unset CUDAROOT
+unset CUDA_HOME
 
-int main() {
-    std::cout << "Hello from $1!" << std::endl;
-    
-    std::vector<std::string> features = {
-        "Modern C++17",
-        "CMake build system", 
-        "Ready for development"
-    };
-    
-    std::cout << "Project features:" << std::endl;
-    for (const auto& feature : features) {
-        std::cout << "  ✓ " << feature << std::endl;
-    }
-    
-    return 0;
-}
-EOFCPP
-    
-    cat > CMakeLists.txt << EOFCMAKE
-cmake_minimum_required(VERSION 3.10)
-project($1)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -DDEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
-
-add_executable(main main.cpp)
-EOFCMAKE
-    
-    cat > .gitignore << 'EOFGIT'
-build/
-cmake-build-*/
-*.o
-*.so
-*.a
-*.exe
-main
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
-EOFGIT
-
-    echo "✅ Created C++ project with full setup!"
-    echo "🎯 Next: cpp-build && nvim ."
-}
-
-# Git integration
-git-init-cpp() {
-    if [[ -z "$1" ]]; then
-        echo "Usage: git-init-cpp <project-name>"
-        return 1
-    fi
-    
-    cpp-init "$1"
-    git init
-    git add .
-    git commit -m "Initial commit: C++ project setup"
-    echo "🎉 Git repository initialized!"
-}
-
-# Build and run
-cpp-run() {
-    echo "🔨 Building..."
-    cpp-build && {
-        if [[ -x "./main" ]]; then
-            echo "🚀 Running ./main:"
-            ./main
-        elif [[ -x "./build/main" ]]; then
-            echo "🚀 Running ./build/main:"
-            ./build/main
-        fi
-    }
-}
-
-# Enhanced cd with ls
-cd() {
-    builtin cd "$@" && ls --color=auto
-}
-
-# Extract function
-extract() {
-    if [[ -f $1 ]]; then
-        case $1 in
-            *.tar.bz2)   tar xjf $1     ;;
-            *.tar.gz)    tar xzf $1     ;;
-            *.bz2)       bunzip2 $1     ;;
-            *.gz)        gunzip $1      ;;
-            *.tar)       tar xf $1      ;;
-            *.zip)       unzip $1       ;;
-            *)           echo "'$1' cannot be extracted" ;;
-        esac
-    fi
-}
-
-# Welcome message
-echo ""
-echo "🎯 Enhanced C++ Development Environment"
-echo "📅 $(date)"
-echo "💻 $(hostname) | $(uname -s)"
-echo ""
-echo "🚀 Quick Commands:"
-echo "   cpp-init <name>     Create C++ project"
-echo "   git-init-cpp <name> Create C++ project with git"
-echo "   cpp-run             Build and run project"
-echo "   v .                 Open in Neovim"
-echo "   projects            Go to projects directory"
-echo ""
+export LD_LIBRARY_PATH=$HOME/nvhpc-23.5/Linux_x86_64/23.5/cuda/12.1/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/nabayanc/.mujoco/mujoco210/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/nvidia
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/nabayanc/IRIS-GNN-WS/sycl-implementations/talos/dpcpp-cpu-cuda/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/nabayanc/IRIS-GNN-WS/sycl-implementations/talos/iris/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$HOME/IRIS-GNN_WS/sycl-implementations/talos/unisycl/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/nabayanc/IRIS-GNN-WS/ATSAR-DPCPP/build/lib:$LD_LIBRARY_PATH
+export CUDA_HOME=$HOME/nvhpc-23.5/Linux_x86_64/23.5/cuda/12.1
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+export NVHPC_ROOT=$HOME/nvhpc-23.5/Linux_x86_64/23.5
+export NVHPC_CUDA_HOME=$HOME/nvhpc-23.5/Linux_x86_64/23.5/cuda/12.1
+export CUDA_PATH=$NVHPC_CUDA_HOME
+export PATH=$NVHPC_ROOT/compilers/bin:$PATH
+export PATH=$CUDA_PATH/bin:$PATH
+export PATH=$HOME/local/tcl/bin:$PATH 
+export REINSTALL_IRIS=true
+export REINSTALL_UNISYCL=true
+export UNISYCL_DIR=/home/nabayanc/IRIS-GNN-WS/CHARM-SYCL
+export PATH=$HOME/IRIS-GNN-WS/hwloc/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/IRIS-GNN-WS/hwloc/lib:$LD_LIBRARY_PATH
+export LIBRARY_PATH=$HOME/IRIS-GNN-WS/hwloc/lib:$LIBRARY_PATH
+export C_INCLUDE_PATH=$HOME/IRIS-GNN-WS/hwloc/include:$C_INCLUDE_PATH
+export CPLUS_INCLUDE_PATH=$HOME/IRIS-GNN-WS/hwloc/include:$CPLUS_INCLUDE_PATH
+export PKG_CONFIG_PATH=$HOME/IRIS-GNN-WS/hwloc/lib/pkgconfig:$PKG_CONFIG_PATH
