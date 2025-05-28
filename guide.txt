@@ -1,0 +1,4 @@
+clean-deploy
+fix-tabs
+install-omz
+fix-zsh
